@@ -1,0 +1,29 @@
+version: '3'
+services:
+  order-service:
+    build:
+      context: ./Order
+    ports:
+      - "5001:5001"
+    environment:
+      NODE_ENV: production
+
+  payment-service:
+    build:
+      context: ./Payment
+    ports:
+      - "5002:5002"
+
+  product-service:
+    build:
+      context: ./Product
+    ports:
+      - "5000:5000"
+    environment:
+      NODE_ENV: production
+
+  client:
+    build:
+      context: ./Client
+    ports:
+      - "3000:3000"

@@ -1,0 +1,16 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: mcommerce
+spec:
+  project: default
+  source:
+    repoURL: https://gitlab.com/oussama-akhmis/mcommerce.git
+    targetRevision: main
+    path: K8s/*
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true

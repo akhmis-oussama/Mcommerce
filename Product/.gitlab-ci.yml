@@ -1,0 +1,74 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+stages:
+  - test
+  - build
+  - package
+  - sast
+  - deploy
+  - dast
+
+variables:
+  TAG: "1.0.2"
+  DAST_WEBSITE: http://your_actual_deployed_app_url:5000
+  DAST_FULL_SCAN_ENABLED: "true"
+  DOCKER_IMAGE_NAME: oakhmis/product-image
+
+include:
+  - template: SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: DAST.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+
+container_scanning:
+  variables:
+    CS_DOCKERFILE_PATH: Dockerfile
+    GIT_STRATEGY: fetch
+    CS_IMAGE: $DOCKER_IMAGE_NAME
+
+product-node-build:
+  image: node:latest
+  stage: build
+  script:
+    - cd ./Product
+    - npm install --package-lock-only
+    - npm install
+    - npm run build
+
+product-docker-build:
+  stage: package
+  before_script:
+    - docker login -u oakhmis -p $CONTAINER_REGISTRY_PASSWORD
+  script:
+    - docker build -t $DOCKER_IMAGE_NAME:$TAG ./Product
+    - docker push $DOCKER_IMAGE_NAME:$TAG
+
+product-nodejsscan:
+  stage: sast
+  image: node:14
+  script:
+    - cd ./Product
+    - npm install --package-lock-only
+    - npm install
+    - npm audit fix
+    - npm audit --json --audit-level=info > product-service-security-report.json || true
+  artifacts:
+    paths:
+      - Product/product-service-security-report.json
+
+product-docker-deploy:
+  stage: deploy
+  before_script:
+    - docker login -u oakhmis -p $CONTAINER_REGISTRY_PASSWORD
+  script:
+    - docker run -d -p 5000:5000 --name product $DOCKER_IMAGE_NAME:$TAG
+    - sleep 30
+    - docker logs product
+
+dast:
+  services:
+    - name: $DOCKER_IMAGE_NAME:$TAG
+      alias: product

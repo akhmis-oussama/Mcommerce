@@ -1,0 +1,62 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+variables:
+  DAST_WEBSITE: http://client:3000
+  DAST_FULL_SCAN_ENABLED: "true"
+  DOCKER_IMAGE_NAME: oakhmis/client-image
+  TAG: "1.0.2"
+
+stages:
+  - test
+  - build
+  - package
+  - sast
+  - deploy
+  - dast
+
+include:
+  - template: SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: DAST.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+
+container_scanning:
+  variables:
+    CS_DOCKERFILE_PATH: Dockerfile
+    GIT_STRATEGY: fetch
+    CS_IMAGE: $DOCKER_IMAGE_NAME
+
+client-docker-build:
+  stage: package
+  before_script:
+    - docker login -u oakhmis -p $CONTAINER_REGISTRY_PASSWORD
+  script:
+    - docker build -t $DOCKER_IMAGE_NAME:$TAG ./Client
+    - docker push $DOCKER_IMAGE_NAME:$TAG
+
+client-nodejsscan:
+  stage: sast
+  image: node:14
+  script:
+    - cd ./Client
+    - npm install --legacy-peer-deps
+    - npm audit fix
+    - npm audit --json > client-service-security-report.json || true
+  artifacts:
+    paths:
+      - Client/client-service-security-report.json
+
+client-docker-deploy:
+  stage: deploy
+  before_script:
+    - docker login -u oakhmis -p $CONTAINER_REGISTRY_PASSWORD
+  script:
+    - docker run -d -p 3000:3000 --name Client $DOCKER_IMAGE_NAME:$TAG
+
+dast:
+  services:
+    - name: $DOCKER_IMAGE_NAME:$TAG
+      alias: client

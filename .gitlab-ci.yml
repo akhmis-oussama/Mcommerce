@@ -1,0 +1,13 @@
+stages:
+  - test
+  - build
+  - package
+  - sast
+  - deploy
+  - dast
+  
+include:
+  - local: 'Product/.gitlab-ci.yml'
+  - local: 'Order/.gitlab-ci.yml'
+  - local: 'Payment/.gitlab-ci.yml'
+  - local: 'Client/.gitlab-ci.yml'

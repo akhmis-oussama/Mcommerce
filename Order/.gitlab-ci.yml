@@ -1,0 +1,73 @@
+image: docker:latest
+
+variables:
+  TAG: "1.0.2"
+  DAST_WEBSITE: http://commande:5001
+  DAST_FULL_SCAN_ENABLED: "true"
+  DOCKER_IMAGE_NAME: oakhmis/order-image
+
+stages:
+  - test
+  - build
+  - package
+  - sast
+  - deploy
+  - dast
+
+services:
+  - docker:dind
+
+include:
+  - template: SAST.gitlab-ci.yml
+  - template: Jobs/Dependency-Scanning.gitlab-ci.yml
+  - template: DAST.gitlab-ci.yml
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+
+container_scanning:
+  variables:
+    CS_DOCKERFILE_PATH: Dockerfile
+    GIT_STRATEGY: fetch
+    CS_IMAGE: $DOCKER_IMAGE_NAME
+
+order-node-build:
+  stage: build
+  image: node:latest
+  script:
+    - cd ./Order
+    - npm install --package-lock-only
+    - npm install
+    - npm run build
+
+order-docker-build:
+  stage: package
+  image: docker:latest
+  before_script:
+    - docker login -u oakhmis -p $CONTAINER_REGISTRY_PASSWORD
+  script:
+    - docker build -t $DOCKER_IMAGE_NAME:$TAG ./Order
+    - docker push $DOCKER_IMAGE_NAME:$TAG
+
+order-nodejsscan:
+  stage: sast
+  image: node:14
+  script:
+    - cd ./Order
+    - npm install --package-lock-only
+    - npm install
+    - npm audit fix
+    - npm audit --json --audit-level=info > order-service-security-report.json || true
+  artifacts:
+    paths:
+      - Order/order-service-security-report.json
+
+order-docker-deploy:
+  stage: deploy
+  script:
+    - docker run -d -p 5001:5001 --name Order $DOCKER_IMAGE_NAME:$TAG
+    - sleep 30
+    - docker logs Order
+
+dast:
+  services:
+    - name: $DOCKER_IMAGE_NAME:$TAG
+      alias: order
