@@ -5,6 +5,7 @@ const cors = require('cors')
 const env = require('dotenv')
 const mongoose = require('mongoose')
 const authRouter = require('./routes/auth/auth')//import authrouter
+const userRouter = require('./routes/user/user')//import user router
 mongoose.set('strictQuery', false)
 
 env.config()
