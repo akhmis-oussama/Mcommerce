@@ -1,11 +1,10 @@
 const express = require('express')
 const app = express()
-const port = 5000
+const port = 5003
 const cors = require('cors')
 const env = require('dotenv')
 const mongoose = require('mongoose')
 const authRouter = require('./routes/auth/auth')//import authrouter
-const userRouter = require('./routes/user/user')//import user router
 mongoose.set('strictQuery', false)
 
 env.config()
@@ -14,8 +13,6 @@ app.use(cors())
 app.use(express.json())
 //call the routes here
 app.use('/api',authRouter)
-app.use('/api',userRouter)
-
 app.listen(port,()=>{
 console.log(`Server running on ${port}`);
 
