@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 
 const Item = require('./models/product');
 
-const uri = 'mongodb+srv://oussama-akhmis:oQ98qG8XkwoCUy3V@cluster0.uroqo9m.mongodb.net/?retryWrites=true&w=majority';
+const uri = 'mongodb://127.0.0.1:27017/Mcommerce';
 
 async function importData() {
   try {

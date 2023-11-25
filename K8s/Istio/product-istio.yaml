@@ -1,0 +1,20 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: product
+  namespace: mcommerce
+spec:
+  hosts:
+  - product.mcommerce.svc.cluster.local  # Replace with your service hostname
+  http:
+  - route:
+    - destination:
+        host: product.mcommerce.svc.cluster.local
+        port:
+          number: 5000
+      weight: 80
+    - destination:
+        host: product-canary.mcommerce.svc.cluster.local  # Replace with your canary service hostname
+        port:
+          number: 8081  # Adjust port as needed for canary
+      weight: 20

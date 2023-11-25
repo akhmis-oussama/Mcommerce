@@ -1,0 +1,51 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: client-gateway
+  namespace: mcommerce
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - canary.33test.dev-sandbox.fpcomplete.com
+    port:
+      name: https-client
+      number: 443
+      protocol: HTTPS
+    tls:
+      credentialName: client-ingress-cert
+      mode: SIMPLE
+  - hosts:
+    - canary.33test.dev-sandbox.fpcomplete.com
+    port:
+      name: http-client
+      number: 80
+      protocol: HTTP
+    tls:
+      httpsRedirect: true
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: client
+  namespace: mcommerce
+spec:
+  gateways:
+  - client-gateway
+  hosts:
+  - canary.33test.dev-sandbox.fpcomplete.com
+  http:
+  - route:
+    - destination:
+        host: client.canary.svc.cluster.local
+        port:
+          number: 8000
+        subset: v1
+      weight: 80
+    - destination:
+        host: client.canary.svc.cluster.local
+        port:
+          number: 8001
+        subset: v2
+      weight: 20

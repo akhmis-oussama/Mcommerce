@@ -7,7 +7,6 @@ import About from './component/About'
 
 import {Routes, Route, BrowserRouter, Router} from 'react-router-dom';
 import Product from './component/Product';
-
 function App() {
   return (
   <div>

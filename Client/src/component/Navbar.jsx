@@ -51,8 +51,8 @@ export default function Navbar() {
                 </Link>
               </li>
               <li className="nav-item">
-                <Link className="nav-link" to="/contact">
-                  <i className="far fa-shopping-bag"></i>
+                <Link className="nav-link" to="/card">
+                <i className="far fa-shopping-bag"></i>
                 </Link>
               </li>
             </ul>

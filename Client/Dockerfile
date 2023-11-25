@@ -17,5 +17,5 @@ RUN npm install -g serve
 # Copy the build output from the previous stage
 COPY --from=builder /client/build ./build
 
-EXPOSE 3000
+EXPOSE 3001
 CMD ["serve", "-s", "build"]
