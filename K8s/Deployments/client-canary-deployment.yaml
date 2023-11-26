@@ -1,37 +1,23 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: client-canary
-  namespace: mcommerce
-spec:
-  selector:
-    app: client
-  ports:
-    - port: 3001 
-  type: LoadBalancer
-
----
-
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: client-canary-deployment
+  name: client-v2
   namespace: mcommerce
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: client
-      version: canary
+      version: v2
   template:
     metadata:
       labels:
         app: client
-        version: canary
+        version: v2
     spec:
       containers:
-        - name: client
-          image: oakhmis/canary-image:latest  
-          ports:
-            - containerPort: 3001
-              name: client-port
+      - image: oakhmis/canary-image:latest
+        imagePullPolicy: IfNotPresent
+        name: tornado
+        ports:
+        - containerPort: 8888
